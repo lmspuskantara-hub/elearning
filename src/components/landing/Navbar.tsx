@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/tut wuri handayani.png";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -9,10 +10,16 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
       <div className="container flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2">
-          <BookOpen className="h-7 w-7 text-accent" />
-          <span className="font-heading text-xl font-bold text-primary">PKBM Learn</span>
-        </Link>
+<Link to="/dashboard" className="flex items-center gap-2">
+  <img
+    src={logo}
+    alt="Logo PKBM"
+    className="h-20 w-20 object-contain"
+  />
+  <span className="font-heading text-xl font-bold text-primary">
+    PKBM PUSPA LOKA NUSANTARA
+  </span>
+</Link>
 
         <div className="hidden md:flex items-center gap-6">
           <a href="#fitur" className="text-muted-foreground hover:text-primary transition-colors font-body">Fitur</a>

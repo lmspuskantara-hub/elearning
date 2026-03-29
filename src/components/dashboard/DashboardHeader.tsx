@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Menu, X, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/tut wuri handayani.png";
 
 const mobileMenuItems = [
   { label: "Dashboard", path: "/dashboard" },
@@ -28,9 +29,15 @@ const DashboardHeader = () => {
     <header className="lg:hidden sticky top-0 z-50 bg-sidebar border-b border-sidebar-border">
       <div className="flex items-center justify-between px-4 h-14">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-sidebar-primary" />
-          <span className="font-heading text-lg font-bold text-sidebar-foreground">PKBM Learn</span>
-        </Link>
+  <img
+    src={logo}
+    alt="Logo PKBM"
+    className="h-12 w-12 object-contain"
+  />
+  <span className="font-heading text-lg font-bold text-sidebar-foreground">
+    PKBM PUSPA LOKA NUSANTARA
+  </span>
+</Link>
         <button onClick={() => setOpen(!open)} className="text-sidebar-foreground">
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>

@@ -22,7 +22,7 @@ const BenefitsSection = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary mb-4">
-              Mengapa Memilih PKBM Learn?
+              Mengapa Memilih PKBM PUSPA LOKA NUSANTARA?
             </h2>
             <p className="text-muted-foreground font-body mb-8">
               Platform yang dirancang khusus untuk kebutuhan Pusat Kegiatan Belajar Masyarakat.

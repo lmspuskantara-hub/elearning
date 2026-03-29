@@ -45,7 +45,7 @@ const Register = () => {
         <CardHeader className="text-center">
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
             <BookOpen className="h-8 w-8 text-accent" />
-            <span className="font-heading text-2xl font-bold text-primary">PKBM Learn</span>
+            <span className="font-heading text-2xl font-bold text-primary">PKBM PUSPA LOKA NUSANTARA</span>
           </Link>
           <CardTitle className="font-heading text-2xl">Daftar Akun</CardTitle>
           <CardDescription className="font-body">Buat akun untuk mulai belajar</CardDescription>

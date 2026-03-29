@@ -7,6 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/use-role";
+import logo from "@/assets/tut wuri handayani.png";
 
 const studentMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -64,9 +65,15 @@ const DashboardSidebar = () => {
     <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
       <div className="p-5 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <BookOpen className="h-7 w-7 text-sidebar-primary" />
-          <span className="font-heading text-xl font-bold text-sidebar-foreground">PKBM Learn</span>
-        </Link>
+  <img
+    src={logo}
+    alt="Logo PKBM"
+    className="h-12 w-12 object-contain"
+  />
+  <span className="font-heading text-l font-bold text-sidebar-foreground">
+    PKBM PUSPA LOKA NUSANTARA
+  </span>
+</Link>
         {userRole && (
           <span className="text-xs font-body text-sidebar-foreground/60 mt-1 block">
             {userRole.isAdmin ? "🛡️ Admin" : userRole.isTeacher ? "👨‍🏫 Guru" : "👨‍🎓 Siswa"}
