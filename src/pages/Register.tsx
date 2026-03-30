@@ -31,7 +31,7 @@ const Register = () => {
         },
       });
       if (error) throw error;
-      toast({ title: "Berhasil!", description: "Silakan cek email untuk verifikasi akun." });
+      toast({ title: "Berhasil!", description: "Silakan login dengan akun yang sudah anda buat." });
       navigate("/login");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Pendaftaran gagal", description: error.message });
