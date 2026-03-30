@@ -23,6 +23,8 @@ const AdminUsersPage = () => {
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("student");
+  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+const [newUserPassword, setNewUserPassword] = useState("");
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -79,6 +81,34 @@ const AdminUsersPage = () => {
     },
     onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
   });
+
+  const changePassword = useMutation({
+  mutationFn: async () => {
+    const res = await supabase.functions.invoke(
+      "admin-change-password",
+      {
+        body: {
+          userId: passwordUserId,
+          password: newUserPassword,
+        },
+      }
+    );
+
+    if (res.error) throw res.error;
+    if (res.data?.error) throw new Error(res.data.error);
+  },
+  onSuccess: () => {
+    toast({ title: "Password berhasil diubah!" });
+    setPasswordUserId(null);
+    setNewUserPassword("");
+  },
+  onError: (e: any) =>
+    toast({
+      variant: "destructive",
+      title: "Gagal",
+      description: e.message,
+    }),
+});
 
   const roleLabel = (role: string) => {
     switch (role) {
@@ -165,7 +195,7 @@ const AdminUsersPage = () => {
                       ) : (
                         <Users className="h-5 w-5 text-primary" />
                       )}
-                    </div>
+                      </div>
                     <div>
                       <p className="font-heading font-semibold">{u.full_name || "Tanpa Nama"}</p>
                       <div className="flex gap-1 mt-1">
@@ -174,6 +204,13 @@ const AdminUsersPage = () => {
                             {roleLabel(r)}
                           </Badge>
                         ))}
+                        <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPasswordUserId(u.id)}
+                      >
+                        Ganti Password
+                      </Button>
                         {u.roles.length === 0 && (
                           <Badge variant="outline" className="text-xs">Tanpa Role</Badge>
                         )}
@@ -205,6 +242,38 @@ const AdminUsersPage = () => {
               </CardContent>
             </Card>
           )}
+          <Dialog
+            open={!!passwordUserId}
+            onOpenChange={() => setPasswordUserId(null)}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Ganti Password Pengguna</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Password Baru</Label>
+                  <Input
+                    type="password"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                  />
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={() => changePassword.mutate()}
+                  disabled={changePassword.isPending || !newUserPassword}
+                >
+                  {changePassword.isPending
+                    ? "Mengubah..."
+                    : "Ubah Password"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>
