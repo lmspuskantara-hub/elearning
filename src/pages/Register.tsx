@@ -7,6 +7,7 @@ import { BookOpen, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/tut wuri handayani.png";
 
 const Register = () => {
   const [fullName, setFullName] = useState("");
@@ -43,10 +44,13 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
-            <BookOpen className="h-8 w-8 text-accent" />
-            <span className="font-heading text-2xl font-bold text-primary">PKBM PUSPA LOKA NUSANTARA</span>
-          </Link>
+          <Link to="/" className="flex justify-center items-center">
+  <img
+    src={logo}
+    alt="Logo PKBM"
+    className="h-12 w-auto object-contain"
+  />
+</Link>
           <CardTitle className="font-heading text-2xl">Daftar Akun</CardTitle>
           <CardDescription className="font-body">Buat akun untuk mulai belajar</CardDescription>
         </CardHeader>

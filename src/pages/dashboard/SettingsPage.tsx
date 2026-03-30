@@ -17,7 +17,8 @@ const SettingsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState("");
-
+const [newPassword, setNewPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -42,6 +43,40 @@ const SettingsPage = () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
+
+  const changePassword = useMutation({
+  mutationFn: async () => {
+    if (newPassword.length < 6) {
+      throw new Error("Password minimal 6 karakter");
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new Error("Konfirmasi password tidak cocok");
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) throw error;
+  },
+  onSuccess: () => {
+    setNewPassword("");
+    setConfirmPassword("");
+
+    toast({
+      title: "Password berhasil diganti",
+      description: "Gunakan password baru saat login berikutnya.",
+    });
+  },
+  onError: (err: any) => {
+    toast({
+      title: "Gagal mengganti password",
+      description: err.message,
+      variant: "destructive",
+    });
+  },
+});
 
   const handleBecomeTeacher = () => {
     switchRole.mutate("teacher", {
@@ -94,6 +129,45 @@ const SettingsPage = () => {
               {switchRole.isPending ? "Memproses..." : "Daftar sebagai Guru"}
             </Button>
           )}
+          <Card>
+  <CardHeader>
+    <CardTitle className="font-heading text-lg flex items-center gap-2">
+      <Shield className="h-5 w-5 text-accent" />
+      Keamanan Akun
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="space-y-4 max-w-md">
+    <div className="space-y-2">
+      <Label>Password Baru</Label>
+      <Input
+        type="password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        placeholder="Masukkan password baru"
+      />
+    </div>
+
+    <div className="space-y-2">
+      <Label>Konfirmasi Password</Label>
+      <Input
+        type="password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        placeholder="Ulangi password"
+      />
+    </div>
+
+    <Button
+      onClick={() => changePassword.mutate()}
+      disabled={changePassword.isPending}
+    >
+      {changePassword.isPending
+        ? "Mengganti..."
+        : "Ganti Password"}
+    </Button>
+  </CardContent>
+</Card>
         </CardContent>
       </Card>
     </div>
