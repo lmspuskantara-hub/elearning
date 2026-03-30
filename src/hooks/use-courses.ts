@@ -128,16 +128,18 @@ export const useDashboardStats = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return { activeCourses: 0, completedQuizzes: 0, pendingAssignments: 0, activeForums: 0 };
 
-      const { count: enrollmentCount } = await supabase
-        .from("enrollments")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
+      const [enrollments, quizAttempts, submissions, forumTopics] = await Promise.all([
+        supabase.from("enrollments").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("quiz_attempts").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "completed"),
+        supabase.from("assignment_submissions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("forum_topics").select("*", { count: "exact", head: true }).eq("author_id", user.id),
+      ]);
 
       return {
-        activeCourses: enrollmentCount || 0,
-        completedQuizzes: 0,
-        pendingAssignments: 0,
-        activeForums: 0,
+        activeCourses: enrollments.count || 0,
+        completedQuizzes: quizAttempts.count || 0,
+        pendingAssignments: submissions.count || 0,
+        activeForums: forumTopics.count || 0,
       };
     },
   });

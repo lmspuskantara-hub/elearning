@@ -14,7 +14,7 @@ const Navbar = () => {
   <img
     src={logo}
     alt="Logo PKBM"
-    className="h-20 w-20 object-contain"
+    className="h-12 w-12 object-contain"
   />
   <span className="font-heading text-xl font-bold text-primary">
     PKBM PUSPA LOKA NUSANTARA

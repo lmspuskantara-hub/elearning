@@ -11,8 +11,8 @@ const DashboardHome = () => {
   const statItems = [
     { icon: BookOpen, label: "Kursus Aktif", value: String(stats?.activeCourses || 0), color: "text-primary" },
     { icon: FileQuestion, label: "Kuis Selesai", value: String(stats?.completedQuizzes || 0), color: "text-accent" },
-    { icon: ClipboardCheck, label: "Tugas Pending", value: String(stats?.pendingAssignments || 0), color: "text-warning" },
-    { icon: Users, label: "Forum Aktif", value: String(stats?.activeForums || 0), color: "text-success" },
+    { icon: ClipboardCheck, label: "Tugas Dikumpulkan", value: String(stats?.pendingAssignments || 0), color: "text-warning" },
+    { icon: Users, label: "Topik Forum", value: String(stats?.activeForums || 0), color: "text-success" },
   ];
 
   return (

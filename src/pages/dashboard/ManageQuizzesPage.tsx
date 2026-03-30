@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, FileQuestion, Trash2, Plus } from "lucide-react";
+import ImportQuestionsDialog from "@/components/quiz/ImportQuestionsDialog";
+import GradeEssayDialog from "@/components/quiz/GradeEssayDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -284,20 +286,23 @@ const ManageQuizzesPage = () => {
             <h1 className="text-2xl font-heading font-bold text-primary">{quiz?.title}</h1>
             <p className="text-muted-foreground font-body mt-1">{questions?.length || 0} soal</p>
           </div>
-          <Dialog open={questionOpen} onOpenChange={setQuestionOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Soal</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="font-heading">Tambah Soal</DialogTitle>
-              </DialogHeader>
-              {renderQuestionForm()}
-              <Button onClick={() => addQuestion.mutate()} disabled={!question.question_text.trim() || addQuestion.isPending} className="w-full">
-                {addQuestion.isPending ? "Menyimpan..." : "Simpan Soal"}
-              </Button>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <ImportQuestionsDialog quizId={selectedQuizId} existingCount={questions?.length || 0} />
+            <Dialog open={questionOpen} onOpenChange={setQuestionOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Soal</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="font-heading">Tambah Soal</DialogTitle>
+                </DialogHeader>
+                {renderQuestionForm()}
+                <Button onClick={() => addQuestion.mutate()} disabled={!question.question_text.trim() || addQuestion.isPending} className="w-full">
+                  {addQuestion.isPending ? "Menyimpan..." : "Simpan Soal"}
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {questions?.length ? (
@@ -404,10 +409,11 @@ const ManageQuizzesPage = () => {
                       <p className="text-sm text-muted-foreground font-body">{q.questions?.[0]?.count || 0} soal · {q.time_limit_minutes} menit · KKM {q.passing_score}%</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                     <Badge variant={q.is_published ? "default" : "secondary"}>
                       {q.is_published ? "Publik" : "Draft"}
                     </Badge>
+                    <GradeEssayDialog quizId={q.id} quizTitle={q.title} />
                     <Button variant="ghost" size="sm" onClick={() => publishQuiz.mutate({ id: q.id, published: q.is_published })}>
                       {q.is_published ? "Sembunyikan" : "Publikasikan"}
                     </Button>

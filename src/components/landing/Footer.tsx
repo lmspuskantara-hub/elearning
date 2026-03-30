@@ -10,7 +10,7 @@ const Footer = () => {
   <img
     src={logo}
     alt="Logo PKBM"
-    className="h-12 w-12 object-contain"
+    className="h-10 w-10 object-contain"
   />
   <span className="font-heading text-lg font-bold text-primary-foreground">
     PKBM Puspa Loka Nusantara.

@@ -32,7 +32,7 @@ const DashboardHeader = () => {
   <img
     src={logo}
     alt="Logo PKBM"
-    className="h-12 w-12 object-contain"
+    className="h-9 w-9 object-contain"
   />
   <span className="font-heading text-lg font-bold text-sidebar-foreground">
     PKBM PUSPA LOKA NUSANTARA

@@ -35,15 +35,12 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="flex items-center">
+<Link to="/" className="flex justify-center items-center">
   <img
     src={logo}
     alt="Logo PKBM"
     className="h-12 w-auto object-contain"
   />
-  <span className="font-heading text-xl font-bold text-primary">
-    PKBM PUSPA LOKA NUSANTARA
-  </span>
 </Link>
           <CardTitle className="font-heading text-xl">Masuk</CardTitle>
           <CardDescription className="font-body">Masukkan email dan password Anda</CardDescription>

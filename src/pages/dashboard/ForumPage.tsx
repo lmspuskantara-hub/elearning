@@ -29,27 +29,32 @@ const ForumPage = () => {
   const [courseId, setCourseId] = useState("");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
-
   const { data: courses } = useQuery({
-    queryKey: ["courses-for-forum"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("courses").select("id, title").order("title");
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  queryKey: ["courses-for-forum"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("courses")
+      .select("id, title")
+      .order("title");
 
-  const { data: topics, isLoading } = useQuery({
-    queryKey: ["forum-topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("forum_topics")
-        .select("*, courses(title), profiles:author_id(full_name)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
-  });
+    if (error) throw error;
+    return data ?? [];
+  },
+});
+
+const { data: topics, isLoading } = useQuery({
+  queryKey: ["forum-topics"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("forum_topics_full")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+  staleTime: 1000 * 60 * 5,
+});
 
   // Fetch reply counts
   const { data: replyCounts } = useQuery({
@@ -68,7 +73,7 @@ const ForumPage = () => {
   });
 
   // Fetch replies for selected topic
-  const { data: replies } = useQuery({
+    const { data: replies } = useQuery({
     queryKey: ["forum-replies", selectedTopic],
     queryFn: async () => {
       if (!selectedTopic) return [];
@@ -79,6 +84,8 @@ const ForumPage = () => {
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data || [];
+      console.log("selectedTopic:", selectedTopic);
+console.log("replies:", data);
     },
     enabled: !!selectedTopic,
   });
