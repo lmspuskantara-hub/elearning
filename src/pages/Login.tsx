@@ -64,11 +64,7 @@ const Login = () => {
               {loading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
-          <p className="text-center text-sm text-muted-foreground mt-4 font-body">
-            Belum punya akun?{" "}
-            <Link to="/register" className="text-accent hover:underline font-semibold">Daftar</Link>
-          </p>
-        </CardContent>
+               </CardContent>
       </Card>
     </div>
   );

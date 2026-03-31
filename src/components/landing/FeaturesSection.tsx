@@ -5,15 +5,14 @@ import {
 } from "lucide-react";
 
 const features = [
-  { icon: BookOpen, title: "Manajemen Kursus", desc: "Kursus terstruktur dengan bab, video YouTube, teks, dan PDF." },
-  { icon: FileQuestion, title: "Kuis & Ujian", desc: "8 tipe soal dengan auto-grading untuk soal objektif." },
-  { icon: ClipboardCheck, title: "Penugasan", desc: "Siswa kumpulkan tugas, guru beri skor dan feedback." },
-  { icon: BarChart3, title: "Tracking Progres", desc: "Pantau kemajuan belajar real-time per siswa." },
-  { icon: MessageSquare, title: "Forum Diskusi", desc: "Diskusi per sesi kursus untuk memperdalam materi." },
-  { icon: Calendar, title: "Periode & Sesi", desc: "Atur semester, kelas, dan rombel otomatis." },
-  { icon: Lock, title: "Akses Sekuensial", desc: "Kontrol urutan belajar dengan KKM." },
-  { icon: UserCheck, title: "Absensi Online", desc: "Check-in dengan kode unik, rekap siap export." },
-  { icon: Download, title: "Export Data", desc: "Export progres dan kehadiran ke CSV." },
+  { icon: BookOpen, title: "Ruang Belajar Mandiri", desc: "Akses materi belajar lengkap mulai dari video tutorial, modul PDF, hingga bacaan menarik yang disusun khusus untuk memudahkanmu memahami setiap bab." },
+  { icon: FileQuestion, title: "Asah Kemampuan & Evaluasi", desc: "Uji pemahamanmu dengan berbagai tipe latihan soal. Dapatkan hasil instan sehingga kamu tahu bagian mana yang sudah dikuasai dan mana yang perlu diulang." },
+  { icon: ClipboardCheck, title: "Kirim Tugas & Dapatkan Umpan Balik", desc: "Kumpulkan hasil karyamu di sini. Guru akan memberikan nilai serta masukan berharga agar kualitas belajarmu terus meningkat dari hari ke hari." },
+  { icon: BarChart3, title: "Pantau Nilai & Pencapaianmu", desc: "Lihat grafik perkembangan belajarmu secara langsung. Pastikan target belajarmu tercapai tepat waktu dengan memantau setiap progres yang ada." },
+  { icon: MessageSquare, title: "Ruang Diskusi & Berbagi Ide", desc: "Jangan ragu untuk bertanya! Gunakan ruang ini untuk berdiskusi dengan teman sekelas atau berkonsultasi langsung dengan guru mengenai materi yang sulit." },
+  { icon: Lock, title: "Jalur Belajar Bertahap (Sesuai Target)", desc: "Sistem kami membimbingmu belajar secara urut. Pastikan kamu menguasai satu materi sebelum lanjut ke tantangan berikutnya agar hasil belajarmu maksimal." },
+  { icon: UserCheck, title: "Catat Kehadiran Digital", desc: "Lakukan presensi dengan mudah menggunakan kode unik di setiap sesi. Riwayat kehadiranmu akan tercatat rapi sebagai bagian dari kedisiplinan belajar." },
+  
 ];
 
 const FeaturesSection = () => {
@@ -27,10 +26,10 @@ const FeaturesSection = () => {
           className="text-center mb-14"
         >
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary mb-4">
-            Fitur Lengkap untuk PKBM
+            Fasilitas Belajar Terbaik untuk Masa Depanmu di PKBM Puspa Loka Nusantara
           </h2>
           <p className="text-muted-foreground font-body max-w-2xl mx-auto">
-            Semua yang Anda butuhkan untuk mengelola pembelajaran secara digital
+           Langkah Nyata Menuju Keberhasilan melalui Pembelajaran Digital Terpadu.
           </p>
         </motion.div>
 

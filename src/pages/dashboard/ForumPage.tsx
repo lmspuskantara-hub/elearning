@@ -167,7 +167,7 @@ console.log("replies:", data);
               <div>
                 <h2 className="font-heading font-bold text-xl">{currentTopic.title}</h2>
                 <div className="flex gap-2 mt-1 text-sm text-muted-foreground">
-                  {currentTopic.courses?.title && <Badge variant="secondary">{currentTopic.courses.title}</Badge>}
+                  {currentTopic.course_title && <Badge variant="secondary">{currentTopic.course_title}</Badge>}
                   <span className="flex items-center gap-1"><User className="h-3 w-3" />{(currentTopic as any).profiles?.full_name || "Anonim"}</span>
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatDistanceToNow(new Date(currentTopic.created_at), { locale: localeId, addSuffix: true })}</span>
                 </div>

@@ -21,14 +21,9 @@ const Navbar = () => {
   </span>
 </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          <a href="#fitur" className="text-muted-foreground hover:text-primary transition-colors font-body">Fitur</a>
-          <a href="#keuntungan" className="text-muted-foreground hover:text-primary transition-colors font-body">Keuntungan</a>
-          <Link to="/login">
-            <Button variant="ghost">Masuk</Button>
-          </Link>
-          <Link to="/register">
-            <Button variant="hero">Daftar Sekarang</Button>
+        <div className="hidden 2xl:flex items-center gap-2">
+                 <Link to="/login">
+            <Button variant="hero">Mulai Belajar</Button>
           </Link>
         </div>
 
@@ -39,10 +34,7 @@ const Navbar = () => {
 
       {mobileOpen && (
         <div className="md:hidden bg-background border-b p-4 space-y-3">
-          <a href="#fitur" className="block text-muted-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>Fitur</a>
-          <a href="#keuntungan" className="block text-muted-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>Keuntungan</a>
-          <Link to="/login" className="block"><Button variant="ghost" className="w-full">Masuk</Button></Link>
-          <Link to="/register" className="block"><Button variant="hero" className="w-full">Daftar Sekarang</Button></Link>
+           <Link to="/login" className="block"><Button variant="ghost" className="w-full">Mulai Belajar</Button></Link>
         </div>
       )}
     </nav>

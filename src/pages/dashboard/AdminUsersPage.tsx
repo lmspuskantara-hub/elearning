@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Users, Shield, UserPlus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -23,8 +24,6 @@ const AdminUsersPage = () => {
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("student");
-  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
-const [newUserPassword, setNewUserPassword] = useState("");
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -82,34 +81,6 @@ const [newUserPassword, setNewUserPassword] = useState("");
     onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
   });
 
-  const changePassword = useMutation({
-  mutationFn: async () => {
-    const res = await supabase.functions.invoke(
-      "admin-change-password",
-      {
-        body: {
-          userId: passwordUserId,
-          password: newUserPassword,
-        },
-      }
-    );
-
-    if (res.error) throw res.error;
-    if (res.data?.error) throw new Error(res.data.error);
-  },
-  onSuccess: () => {
-    toast({ title: "Password berhasil diubah!" });
-    setPasswordUserId(null);
-    setNewUserPassword("");
-  },
-  onError: (e: any) =>
-    toast({
-      variant: "destructive",
-      title: "Gagal",
-      description: e.message,
-    }),
-});
-
   const roleLabel = (role: string) => {
     switch (role) {
       case "admin": return "Admin";
@@ -134,10 +105,11 @@ const [newUserPassword, setNewUserPassword] = useState("");
           <h1 className="text-2xl md:text-3xl font-heading font-bold text-primary">Kelola Pengguna</h1>
           <p className="text-muted-foreground font-body mt-1">Tambah, hapus, dan kelola role pengguna</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><UserPlus className="h-4 w-4" /> Tambah Pengguna</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+                  <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><UserPlus className="h-4 w-4" /> Tambah Pengguna</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-heading">Tambah Pengguna Baru</DialogTitle>
@@ -177,7 +149,8 @@ const [newUserPassword, setNewUserPassword] = useState("");
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {isLoading ? (
@@ -195,7 +168,7 @@ const [newUserPassword, setNewUserPassword] = useState("");
                       ) : (
                         <Users className="h-5 w-5 text-primary" />
                       )}
-                      </div>
+                    </div>
                     <div>
                       <p className="font-heading font-semibold">{u.full_name || "Tanpa Nama"}</p>
                       <div className="flex gap-1 mt-1">
@@ -204,13 +177,6 @@ const [newUserPassword, setNewUserPassword] = useState("");
                             {roleLabel(r)}
                           </Badge>
                         ))}
-                        <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPasswordUserId(u.id)}
-                      >
-                        Ganti Password
-                      </Button>
                         {u.roles.length === 0 && (
                           <Badge variant="outline" className="text-xs">Tanpa Role</Badge>
                         )}
@@ -242,38 +208,6 @@ const [newUserPassword, setNewUserPassword] = useState("");
               </CardContent>
             </Card>
           )}
-          <Dialog
-            open={!!passwordUserId}
-            onOpenChange={() => setPasswordUserId(null)}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ganti Password Pengguna</DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Password Baru</Label>
-                  <Input
-                    type="password"
-                    value={newUserPassword}
-                    onChange={(e) => setNewUserPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
-                  />
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={() => changePassword.mutate()}
-                  disabled={changePassword.isPending || !newUserPassword}
-                >
-                  {changePassword.isPending
-                    ? "Mengubah..."
-                    : "Ubah Password"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       )}
     </div>

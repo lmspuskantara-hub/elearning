@@ -2,13 +2,11 @@ import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
 const benefits = [
-  "Materi belajar tersedia 24/7 — siswa belajar kapan saja, di mana saja",
-  "Auto-grading kuis menghemat waktu koreksi guru hingga 80%",
-  "Tracking progres real-time membantu identifikasi siswa yang tertinggal",
-  "Konten terstruktur dengan akses sekuensial memastikan belajar sistematis",
-  "Forum diskusi meningkatkan interaksi dan kolaborasi",
-  "Integrasi penjadwalan mempermudah setup kursus per mata pelajaran",
-  "Export data progres dan kehadiran siap pakai untuk evaluasi dan rapor",
+  "Kebebasan Waktu: Akses materi belajar kapan pun Anda siap, tanpa batasan ruang dan waktu.",
+  "Hasil Evaluasi Instan: Ketahui pencapaian belajar Anda secara langsung setelah mengerjakan latihan.",
+  "Pendampingan Terukur: Pantau perkembangan belajarmu agar tetap berada di jalur menuju kelulusan.",
+  "Materi Terpadu: Kurikulum yang disusun bertahap untuk memastikan pemahaman yang lebih mendalam.",
+  "Komunitas Belajar: Ruang berdiskusi untuk saling berbagi ilmu antara tutor dan rekan belajar.",
 ];
 
 const BenefitsSection = () => {
@@ -22,10 +20,10 @@ const BenefitsSection = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary mb-4">
-              Mengapa Memilih PKBM PUSPA LOKA NUSANTARA?
+              Keunggulan Belajar Digital di PKBM Puspa Loka Nusantara
             </h2>
             <p className="text-muted-foreground font-body mb-8">
-              Platform yang dirancang khusus untuk kebutuhan Pusat Kegiatan Belajar Masyarakat.
+              Platform yang dirancang sesuai dengan kebutuhan siswa PKBM Puspa Loka Nusantara .
             </p>
           </motion.div>
 

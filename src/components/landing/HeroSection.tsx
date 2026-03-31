@@ -13,24 +13,24 @@ const HeroSection = () => {
           transition={{ duration: 0.7 }}
         >
           <span className="inline-block px-3 py-1 rounded-full bg-accent/15 text-accent font-body text-sm font-semibold mb-4">
-            Platform E-Learning PKBM
+            Pusat Pembelajaran Terpadu PKBM Puspa Loka Nusantara
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-primary leading-tight mb-6">
-            Belajar Tanpa Batas,{" "}
-            <span className="text-accent">Kapan Saja</span>
+            Fleksibel dalam Waktu,{" "}
+            <span className="text-accent">Terstruktur dalam Ilmu</span>
           </h1>
           <p className="text-lg text-muted-foreground font-body mb-8 max-w-lg">
-            Platform pembelajaran digital lengkap untuk PKBM. Kelola kursus, kuis, tugas, dan pantau progres siswa dalam satu tempat.
+           Fasilitas belajar digital resmi yang dirancang khusus untuk mendukung kemandirian Warga Belajar. Kelola tugas, ikuti evaluasi, dan raih prestasi dalam satu ekosistem yang terintegrasi.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link to="/register">
+            <Link to="/login">
               <Button variant="hero" size="lg" className="text-base px-8">
                 Mulai Belajar
               </Button>
             </Link>
             <a href="#fitur">
               <Button variant="hero-outline" size="lg" className="text-base px-8">
-                Lihat Fitur
+                Eksplorasi Fasilitas
               </Button>
             </a>
           </div>
@@ -48,18 +48,7 @@ const HeroSection = () => {
               alt="Siswa belajar di PKBM"
               className="w-full h-auto object-cover"
             />
-          </div>
-          <div className="absolute -bottom-4 -left-4 bg-card rounded-xl shadow-lg p-4 border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
-                <span className="text-success font-bold">✓</span>
-              </div>
-              <div>
-                <p className="font-heading font-semibold text-sm">Auto-Grading</p>
-                <p className="text-xs text-muted-foreground">Hemat 80% waktu koreksi</p>
-              </div>
-            </div>
-          </div>
+                   </div>
         </motion.div>
       </div>
     </section>
