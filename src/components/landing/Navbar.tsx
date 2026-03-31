@@ -21,7 +21,7 @@ const Navbar = () => {
   </span>
 </Link>
 
-        <div className="hidden 2xl:flex items-center gap-2">
+        <div className="flex items-center gap-6">
                  <Link to="/login">
             <Button variant="hero">Mulai Belajar</Button>
           </Link>
