@@ -30,7 +30,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-primary-foreground/70">
               <li className="flex items-start gap-2">
                 <MapPin className="h-5 w-5 shrink-0 text-secondary" />
-                <span>Jl. Alamat Lengkap PKBM Anda, Kecamatan, Kota/Kabupaten, Provinsi.</span>
+                <span>Kp. Talang Desa Palasari Girang, Kec. Kalapanunggal, Kabupaten Sukabumi, Jawa Barat</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-5 w-5 shrink-0 text-secondary" />
