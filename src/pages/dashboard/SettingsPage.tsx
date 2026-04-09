@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 const SettingsPage = () => {
   const { user } = useAuth();
   const { data: userRole } = useUserRole();
-  const switchRole = useSwitchRole();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState("");
@@ -78,11 +77,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
   },
 });
 
-  const handleBecomeTeacher = () => {
-    switchRole.mutate("teacher", {
-      onSuccess: () => toast({ title: "Berhasil!", description: "Anda sekarang memiliki akses guru." }),
-    });
-  };
+  
 
   return (
     <div className="space-y-6">
