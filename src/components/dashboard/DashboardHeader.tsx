@@ -4,8 +4,9 @@ import { BookOpen, Menu, X, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/tut wuri handayani.png";
+import { useUserRole } from "@/hooks/use-role";
 
-const mobileMenuItems = [
+const studentMenuItems = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Kursus", path: "/dashboard/courses" },
   { label: "Kuis", path: "/dashboard/quizzes" },
@@ -15,10 +16,31 @@ const mobileMenuItems = [
   { label: "Absensi", path: "/dashboard/attendance" },
 ];
 
+const teacherMenuItems = [
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Kelola Kursus", path: "/dashboard/manage-courses" },
+  { label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  { label: "Tugas", path: "/dashboard/assignments" },
+  { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  { label: "Siswa", path: "/dashboard/students" },
+  { label: "Forum", path: "/dashboard/forum" },
+];
+
+const adminMenuItems = [
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Kelola Pengguna", path: "/dashboard/admin-users" },
+  { label: "Kelola Kursus", path: "/dashboard/manage-courses" },
+  { label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  { label: "Tugas", path: "/dashboard/assignments" },
+  { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  { label: "Siswa", path: "/dashboard/students" },
+];
+
 const DashboardHeader = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: userRole } = useUserRole();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
