@@ -1,189 +1,265 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card, CardContent, CardHeader, CardTitle
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, BookOpen, Edit, Trash2 } from "lucide-react";
+import {
+  PlusCircle, BookOpen, Edit, Trash2, Users
+} from "lucide-react";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserRole } from "@/hooks/use-role";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ManageCoursesPage = () => {
   const { user } = useAuth();
+  const { data: userRole } = useUserRole();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState(null);
 
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [studentId, setStudentId] = useState("");
+
+  // ================= COURSES =================
   const { data: courses, isLoading } = useQuery({
-    queryKey: ["teacher-courses", user?.id],
+    queryKey: ["courses", user?.id, userRole],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!user) return [];
+
+      let query = supabase
         .from("courses")
         .select("*")
-        .eq("teacher_id", user!.id)
         .order("created_at", { ascending: false });
+
+      if (!userRole?.isAdmin) {
+        query = query.eq("teacher_id", user.id);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return data;
+    },
+    enabled: !!user && !!userRole,
+  });
+
+  // ================= STUDENTS IN COURSE =================
+  const { data: students } = useQuery({
+    queryKey: ["course-students", selectedCourse],
+    queryFn: async () => {
+      if (!selectedCourse) return [];
+
+      const { data, error } = await supabase
+        .from("course_students")
+        .select("student_id, profiles(full_name)")
+        .eq("course_id", selectedCourse);
+
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!selectedCourse,
   });
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name").eq("id", user!.id).single();
-      return data;
+  // ================= ADD STUDENT =================
+  const addStudent = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("course_students")
+        .insert({
+          course_id: selectedCourse,
+          student_id: studentId,
+        });
+
+      if (error) throw error;
     },
-    enabled: !!user,
+    onSuccess: () => {
+      toast({ title: "Siswa ditambahkan" });
+      setStudentId("");
+      queryClient.invalidateQueries({ queryKey: ["course-students"] });
+    },
   });
 
+  // ================= REMOVE STUDENT =================
+  const removeStudent = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from("course_students")
+        .delete()
+        .eq("course_id", selectedCourse)
+        .eq("student_id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Siswa dihapus" });
+      queryClient.invalidateQueries({ queryKey: ["course-students"] });
+    },
+  });
+
+  // ================= SAVE COURSE =================
   const saveCourse = useMutation({
     mutationFn: async () => {
       if (editingId) {
-        const { error } = await supabase.from("courses").update({ title, description, updated_at: new Date().toISOString() }).eq("id", editingId);
+        const { error } = await supabase
+          .from("courses")
+          .update({ title, description })
+          .eq("id", editingId);
+
         if (error) throw error;
       } else {
         const { error } = await supabase.from("courses").insert({
           title,
           description,
-          teacher_id: user!.id,
-          teacher_name: profile?.full_name || "",
+          teacher_id: user.id,
           status: "draft",
         });
+
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      toast({ title: editingId ? "Kursus diperbarui!" : "Kursus dibuat!" });
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
-      resetForm();
+      toast({ title: "Berhasil disimpan" });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      setEditingId(null);
     },
-    onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
   });
 
-  const publishCourse = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const newStatus = status === "published" ? "draft" : "published";
-      const { error } = await supabase.from("courses").update({ status: newStatus }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teacher-courses"] }),
-  });
-
+  // ================= DELETE COURSE =================
   const deleteCourse = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id) => {
       const { error } = await supabase.from("courses").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Kursus dihapus!" });
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      toast({ title: "Kursus dihapus" });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
   });
 
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setEditingId(null);
-    setOpen(false);
-  };
-
-  const handleEdit = (course: any) => {
-    setTitle(course.title);
-    setDescription(course.description || "");
-    setEditingId(course.id);
-    setOpen(true);
-  };
+  const canManage = userRole?.isAdmin || userRole?.isTeacher;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-primary">Kelola Kursus</h1>
-          <p className="text-muted-foreground font-body mt-1">Buat dan kelola kursus Anda</p>
-        </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); setOpen(v); }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><PlusCircle className="h-4 w-4" /> Buat Kursus</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-heading">{editingId ? "Edit Kursus" : "Buat Kursus Baru"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Judul Kursus</Label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Matematika Paket B" />
-              </div>
-              <div className="space-y-2">
-                <Label>Deskripsi</Label>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Deskripsi singkat kursus..." />
-              </div>
-              <Button onClick={() => saveCourse.mutate()} disabled={!title.trim() || saveCourse.isPending} className="w-full">
-                {saveCourse.isPending ? "Menyimpan..." : editingId ? "Perbarui" : "Buat Kursus"}
+      
+      {/* HEADER */}
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-bold">Kelola Kursus</h1>
+
+        {canManage && (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><PlusCircle className="h-4 w-4 mr-2" /> Buat</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Buat / Edit Kursus</DialogTitle>
+              </DialogHeader>
+
+              <Input
+                placeholder="Judul"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Deskripsi"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+
+              <Button onClick={() => saveCourse.mutate()}>
+                Simpan
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
+      {/* LIST COURSE */}
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
-        </div>
-      ) : courses?.length ? (
-        <div className="space-y-3">
-          {courses.map((c: any) => (
-            <Card key={c.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => navigate(`/dashboard/manage-courses/${c.id}`)}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-heading font-semibold">{c.title}</h3>
-                      <p className="text-sm text-muted-foreground font-body line-clamp-1">{c.description || "Belum ada deskripsi"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={c.status === "published" ? "default" : "secondary"}>
-                      {c.status === "published" ? "Publik" : "Draft"}
-                    </Badge>
-                    <Button variant="ghost" size="icon" onClick={() => publishCourse.mutate({ id: c.id, status: c.status })}>
-                      {c.status === "published" ? "📝" : "🚀"}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteCourse.mutate(c.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Skeleton className="h-20 w-full" />
       ) : (
+        courses?.map((c) => (
+          <Card key={c.id}>
+            <CardContent className="flex justify-between items-center">
+              
+              <div onClick={() => setSelectedCourse(c.id)}>
+                <h3 className="font-bold">{c.title}</h3>
+                <p className="text-sm">{c.description}</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button size="icon" onClick={() => deleteCourse.mutate(c.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+
+                <Button size="icon" onClick={() => setSelectedCourse(c.id)}>
+                  <Users className="h-4 w-4" />
+                </Button>
+              </div>
+
+            </CardContent>
+          </Card>
+        ))
+      )}
+
+      {/* MANAGE STUDENTS */}
+      {selectedCourse && canManage && (
         <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-heading font-semibold text-lg mb-2">Belum Ada Kursus</h3>
-            <p className="text-muted-foreground font-body">Mulai buat kursus pertama Anda.</p>
+          <CardHeader>
+            <CardTitle>Kelola Siswa</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-3">
+
+            <Input
+              placeholder="Masukkan ID siswa"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+            />
+
+            <Button onClick={() => addStudent.mutate()}>
+              Tambah Siswa
+            </Button>
+
+            {/* LIST */}
+            {students?.map((s) => (
+              <div key={s.student_id} className="flex justify-between">
+                <span>{s.profiles?.full_name}</span>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => removeStudent.mutate(s.student_id)}
+                >
+                  Hapus
+                </Button>
+              </div>
+            ))}
+
           </CardContent>
         </Card>
       )}
+
     </div>
   );
 };
