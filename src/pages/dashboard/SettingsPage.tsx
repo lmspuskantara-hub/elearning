@@ -120,15 +120,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
             Role / Peran
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 max-w-md">
-          <div className="text-sm font-body">
-            <p>Peran Anda saat ini: <strong>{userRole?.isTeacher ? "Guru" : "Siswa"}</strong></p>
-          </div>
-          {!userRole?.isTeacher && (
-            <Button variant="outline" onClick={handleBecomeTeacher} disabled={switchRole.isPending}>
-              {switchRole.isPending ? "Memproses..." : "Daftar sebagai Guru"}
-            </Button>
-          )}
+      
           <Card>
   <CardHeader>
     <CardTitle className="font-heading text-lg flex items-center gap-2">
