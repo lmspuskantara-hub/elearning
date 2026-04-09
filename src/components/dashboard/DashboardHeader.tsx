@@ -8,45 +8,43 @@ import logo from "@/assets/tut wuri handayani.png";
 
 // ================= MENU CONFIG =================
 
+// SISWA
 const studentMenuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: GraduationCap, label: "Kursus Saya", path: "/dashboard/courses" },
-  { icon: FileQuestion, label: "Kuis & Ujian", path: "/dashboard/quizzes" },
-  { icon: ClipboardCheck, label: "Tugas", path: "/dashboard/assignments" },
-  { icon: BarChart3, label: "Progres", path: "/dashboard/progress" },
-  { icon: MessageSquare, label: "Forum", path: "/dashboard/forum" },
-  { icon: UserCheck, label: "Absensi", path: "/dashboard/attendance" },
-  { icon: Download, label: "Export Data", path: "/dashboard/export" },
-  { icon: Settings, label: "Pengaturan", path: "/dashboard/settings" },
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Kursus", path: "/dashboard/courses" },
+  { label: "Kuis", path: "/dashboard/quizzes" },
+  { label: "Tugas", path: "/dashboard/assignments" },
+  { label: "Progres", path: "/dashboard/progress" },
+  { label: "Forum", path: "/dashboard/forum" },
+  { label: "Absensi", path: "/dashboard/attendance" },
+  { label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
+// GURU
 const teacherMenuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: PlusCircle, label: "Kelola Kursus", path: "/dashboard/manage-courses" },
-  { icon: FileQuestion, label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
-  { icon: ClipboardCheck, label: "Tugas", path: "/dashboard/assignments" },
-  { icon: UserCheck, label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
-  { icon: Users, label: "Siswa", path: "/dashboard/students" },
-  { icon: MessageSquare, label: "Forum", path: "/dashboard/forum" },
-  { icon: BarChart3, label: "Progres Siswa", path: "/dashboard/progress" },
-  { icon: Download, label: "Export Data", path: "/dashboard/export" },
-  { icon: Settings, label: "Pengaturan", path: "/dashboard/settings" },
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Kelola Kursus", path: "/dashboard/manage-courses" },
+  { label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  { label: "Tugas", path: "/dashboard/assignments" },
+  { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  { label: "Siswa", path: "/dashboard/students" },
+  { label: "Forum", path: "/dashboard/forum" }, 
+  {label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
+// ADMIN
 const adminMenuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Shield, label: "Kelola Pengguna", path: "/dashboard/admin-users" },
-  { icon: PlusCircle, label: "Kelola Kursus", path: "/dashboard/manage-courses" },
-  { icon: FileQuestion, label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
-  { icon: ClipboardCheck, label: "Tugas", path: "/dashboard/assignments" },
-  { icon: UserCheck, label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
-  { icon: Users, label: "Siswa", path: "/dashboard/students" },
-  { icon: GraduationCap, label: "Kursus", path: "/dashboard/courses" },
-  { icon: BarChart3, label: "Progres", path: "/dashboard/progress" },
-  { icon: MessageSquare, label: "Forum", path: "/dashboard/forum" },
-  { icon: Download, label: "Export Data", path: "/dashboard/export" },
-  { icon: Settings, label: "Pengaturan", path: "/dashboard/settings" },
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Kelola Pengguna", path: "/dashboard/admin-users" },
+  { label: "Kelola Kursus", path: "/dashboard/manage-courses" },
+  { label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  { label: "Tugas", path: "/dashboard/assignments" },
+  { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  { label: "Siswa", path: "/dashboard/students" },
+  { label: "Kursus", path: "/dashboard/courses" },
+  {label: "Pengaturan", path: "/dashboard/settings" },
 ];
+
 // ================= COMPONENT =================
 
 const DashboardHeader = () => {
