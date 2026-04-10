@@ -30,7 +30,7 @@ const teacherMenuItems = [
   { label: "Siswa", path: "/dashboard/students" },
   { label: "Forum", path: "/dashboard/forum" }, 
    {label: "Export Data", path: "/dashboard/export" },
-  {label: "Pengaturan", path: "/dashboard/settings" },
+  {label: "Pengaturan", path: "/dashboard/settings"},
 ];
 
 // ADMIN
