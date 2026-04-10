@@ -17,7 +17,7 @@ const studentMenuItems = [
   { label: "Progres", path: "/dashboard/progress" },
   { label: "Forum", path: "/dashboard/forum" },
   { label: "Absensi", path: "/dashboard/attendance" },
-  { label: "Pengaturan", path: "/dashboard/settings" },
+   { label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
 // GURU
@@ -29,6 +29,7 @@ const teacherMenuItems = [
   { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
   { label: "Siswa", path: "/dashboard/students" },
   { label: "Forum", path: "/dashboard/forum" }, 
+   {label: "Export Data", path: "/dashboard/export" },
   {label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
@@ -42,6 +43,7 @@ const adminMenuItems = [
   { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
   { label: "Siswa", path: "/dashboard/students" },
   { label: "Kursus", path: "/dashboard/courses" },
+  {label: "Export Data", path: "/dashboard/export" },
   {label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
