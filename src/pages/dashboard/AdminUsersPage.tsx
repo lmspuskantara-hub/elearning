@@ -66,20 +66,30 @@ const AdminUsersPage = () => {
     onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
   });
 
-  const changeRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      // Remove all existing roles first
-      await supabase.from("user_roles").delete().eq("user_id", userId);
-      // Add new role
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: "Role diperbarui!" });
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    },
-    onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
-  });
+const changeRole = useMutation({
+  mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
+    // 1. Hapus role lama (karena user_roles biasanya 1-to-1 dalam kasus Anda)
+    const { error: deleteError } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId);
+    
+    if (deleteError) throw deleteError;
+
+    // 2. Masukkan role baru
+    // Trigger di DB akan otomatis mengupdate tabel profiles setelah baris ini sukses
+    const { error: insertError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role });
+
+    if (insertError) throw insertError;
+  },
+  onSuccess: () => {
+    toast({ title: "Role & Profil berhasil disinkronkan!" });
+    queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+  },
+  onError: (e: any) => toast({ variant: "destructive", title: "Gagal", description: e.message }),
+});
 
   const roleLabel = (role: string) => {
     switch (role) {
