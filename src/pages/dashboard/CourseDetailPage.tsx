@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, BookOpen, PlusCircle, Play, CheckCircle2,
-  FileText, Video, File, Trash2, Edit, GripVertical
+  FileText, Video, File, Trash2, Edit, VideoIcon, ExternalLink
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -30,12 +30,11 @@ const CourseDetailPage = () => {
   const queryClient = useQueryClient();
   const isTeacherOrAdmin = userRole?.isTeacher || userRole?.isAdmin;
 
-  // Chapter form
+  // --- State Management ---
+  const [meetingUrl, setMeetingUrl] = useState("");
   const [chapterOpen, setChapterOpen] = useState(false);
   const [chapterTitle, setChapterTitle] = useState("");
   const [editChapterId, setEditChapterId] = useState<string | null>(null);
-
-  // Lesson form
   const [lessonOpen, setLessonOpen] = useState(false);
   const [lessonChapterId, setLessonChapterId] = useState("");
   const [lessonTitle, setLessonTitle] = useState("");
@@ -45,10 +44,9 @@ const CourseDetailPage = () => {
   const [lessonFileUrl, setLessonFileUrl] = useState("");
   const [editLessonId, setEditLessonId] = useState<string | null>(null);
   const [lessonFile, setLessonFile] = useState<File | null>(null);
-
-  // Active lesson view
   const [activeLesson, setActiveLesson] = useState<any>(null);
 
+  // --- Queries ---
   const { data: course, isLoading } = useQuery({
     queryKey: ["course-detail", courseId],
     queryFn: async () => {
@@ -58,6 +56,7 @@ const CourseDetailPage = () => {
         .eq("id", courseId!)
         .single();
       if (error) throw error;
+      setMeetingUrl(data.meeting_url || "");
       return data;
     },
     enabled: !!courseId,
@@ -96,12 +95,12 @@ const CourseDetailPage = () => {
   const { data: progress } = useQuery({
     queryKey: ["lesson-progress", courseId, user?.id],
     queryFn: async () => {
-      if (!lessons?.length) return [];
+      if (!lessons?.length || !user) return [];
       const lessonIds = lessons.map((l) => l.id);
       const { data } = await supabase
         .from("lesson_progress")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .in("lesson_id", lessonIds);
       return data || [];
     },
@@ -110,27 +109,36 @@ const CourseDetailPage = () => {
 
   const completedLessonIds = new Set(progress?.filter((p) => p.completed).map((p) => p.lesson_id) || []);
   const totalLessons = lessons?.length || 0;
-  const completedCount = completedLessonIds.size;
-  const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const progressPercent = totalLessons > 0 ? Math.round((completedLessonIds.size / totalLessons) * 100) : 0;
 
   // --- Mutations ---
+  const updateMeeting = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("courses")
+        .update({ meeting_url: meetingUrl })
+        .eq("id", courseId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Link pertemuan diperbarui!" });
+      queryClient.invalidateQueries({ queryKey: ["course-detail", courseId] });
+    },
+  });
+
   const saveChapter = useMutation({
     mutationFn: async () => {
       if (editChapterId) {
-        const { error } = await supabase.from("chapters").update({ title: chapterTitle }).eq("id", editChapterId);
-        if (error) throw error;
+        await supabase.from("chapters").update({ title: chapterTitle }).eq("id", editChapterId);
       } else {
-        const sortOrder = (chapters?.length || 0) + 1;
-        const { error } = await supabase.from("chapters").insert({
+        await supabase.from("chapters").insert({
           course_id: courseId!,
           title: chapterTitle,
-          sort_order: sortOrder,
+          sort_order: (chapters?.length || 0) + 1,
         });
-        if (error) throw error;
       }
     },
     onSuccess: () => {
-      toast({ title: editChapterId ? "Bab diperbarui!" : "Bab ditambahkan!" });
       queryClient.invalidateQueries({ queryKey: ["course-chapters", courseId] });
       setChapterOpen(false);
       setChapterTitle("");
@@ -140,8 +148,7 @@ const CourseDetailPage = () => {
 
   const deleteChapter = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("chapters").delete().eq("id", id);
-      if (error) throw error;
+      await supabase.from("chapters").delete().eq("id", id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["course-chapters", courseId] });
@@ -152,22 +159,12 @@ const CourseDetailPage = () => {
   const saveLesson = useMutation({
     mutationFn: async () => {
       let fileUrl = lessonFileUrl || null;
-
-if (lessonContentType === "pdf" && lessonFile) {
-  const fileName = `${Date.now()}-${lessonFile.name}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("lesson-files")
-    .upload(fileName, lessonFile);
-
-  if (uploadError) throw uploadError;
-
-  const { data: publicUrl } = supabase.storage
-    .from("lesson-files")
-    .getPublicUrl(fileName);
-
-  fileUrl = publicUrl.publicUrl;
-}
+      if (lessonContentType === "pdf" && lessonFile) {
+        const fileName = `${Date.now()}-${lessonFile.name}`;
+        await supabase.storage.from("lesson-files").upload(fileName, lessonFile);
+        const { data: publicUrl } = supabase.storage.from("lesson-files").getPublicUrl(fileName);
+        fileUrl = publicUrl.publicUrl;
+      }
       const lessonData = {
         title: lessonTitle,
         content_type: lessonContentType,
@@ -176,65 +173,48 @@ if (lessonContentType === "pdf" && lessonFile) {
         file_url: fileUrl,
       };
       if (editLessonId) {
-        const { error } = await supabase.from("lessons").update(lessonData).eq("id", editLessonId);
-        if (error) throw error;
+        await supabase.from("lessons").update(lessonData).eq("id", editLessonId);
       } else {
-        const chapterLessons = lessons?.filter((l) => l.chapter_id === lessonChapterId) || [];
-        const { error } = await supabase.from("lessons").insert({
+        await supabase.from("lessons").insert({
           ...lessonData,
           chapter_id: lessonChapterId,
-          sort_order: chapterLessons.length + 1,
+          sort_order: (lessons?.filter(l => l.chapter_id === lessonChapterId).length || 0) + 1,
         });
-        if (error) throw error;
       }
     },
     onSuccess: () => {
-      toast({ title: editLessonId ? "Pelajaran diperbarui!" : "Pelajaran ditambahkan!" });
+      toast({ title: "Pelajaran disimpan!" });
       queryClient.invalidateQueries({ queryKey: ["course-lessons", courseId] });
       resetLessonForm();
-      setLessonFile(null);
     },
   });
 
   const deleteLesson = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("lessons").delete().eq("id", id);
-      if (error) throw error;
+      await supabase.from("lessons").delete().eq("id", id);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["course-lessons", courseId] }),
   });
 
   const markComplete = useMutation({
     mutationFn: async (lessonId: string) => {
-      const { error } = await supabase.from("lesson_progress").upsert(
+      await supabase.from("lesson_progress").upsert(
         { user_id: user!.id, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString() },
         { onConflict: "user_id,lesson_id" }
       );
-      if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lesson-progress", courseId] }),
   });
 
+  // --- Helpers ---
   const resetLessonForm = () => {
     setLessonOpen(false);
     setLessonTitle("");
     setLessonContentType("text");
     setLessonContent("");
     setLessonVideoUrl("");
-    setLessonFileUrl("");
     setEditLessonId(null);
-    setLessonChapterId("");
-  };
-
-  const handleEditLesson = (lesson: any) => {
-    setLessonTitle(lesson.title);
-    setLessonContentType(lesson.content_type);
-    setLessonContent(lesson.content || "");
-    setLessonVideoUrl(lesson.video_url || "");
-    setLessonFileUrl(lesson.file_url || "");
-    setEditLessonId(lesson.id);
-    setLessonChapterId(lesson.chapter_id);
-    setLessonOpen(true);
+    setLessonFile(null);
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
@@ -242,297 +222,225 @@ if (lessonContentType === "pdf" && lessonFile) {
     return match ? `https://www.youtube.com/embed/${match[1]}` : url;
   };
 
-  const contentTypeIcon = (type: string) => {
-    switch (type) {
-      case "video": return <Video className="h-4 w-4 text-accent" />;
-      case "pdf": return <File className="h-4 w-4 text-destructive" />;
-      default: return <FileText className="h-4 w-4 text-primary" />;
-    }
-  };
-
-  if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
-  }
-
-  if (!course) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="font-heading text-xl">Kursus tidak ditemukan</h2>
-        <Button variant="ghost" className="mt-4" onClick={() => navigate(-1)}>Kembali</Button>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="p-8 space-y-4"><Skeleton className="h-12 w-3/4" /><Skeleton className="h-64 w-full" /></div>;
+  if (!course) return <div className="text-center p-20">Kursus tidak ditemukan.</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl md:text-3xl font-heading font-bold text-primary">{course.title}</h1>
-            <Badge variant={course.status === "published" ? "default" : "secondary"}>
-              {course.status === "published" ? "Publik" : "Draft"}
-            </Badge>
+    <div className="container mx-auto max-w-5xl py-6 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between gap-4 border-b pb-6">
+        <div className="flex items-start gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft /></Button>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-3xl font-bold text-primary">{course.title}</h1>
+              <Badge variant={course.status === "published" ? "default" : "secondary"}>
+                {course.status === "published" ? "Publik" : "Draft"}
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">{course.description || "Tidak ada deskripsi."}</p>
+            <p className="text-sm mt-2 font-medium">Pengajar: {course.teacher_name}</p>
           </div>
-          <p className="text-muted-foreground font-body mt-1">{course.description || "Belum ada deskripsi"}</p>
-          <p className="text-sm text-muted-foreground font-body mt-1">Pengajar: {course.teacher_name}</p>
         </div>
-      </div>
 
-      {/* Progress bar for students */}
-      {!isTeacherOrAdmin && totalLessons > 0 && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex justify-between text-sm font-body mb-2">
-              <span>Progres Belajar</span>
-              <span className="font-semibold">{completedCount}/{totalLessons} pelajaran ({progressPercent}%)</span>
-            </div>
-            <Progress value={progressPercent} className="h-2" />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Active Lesson Viewer */}
-      {activeLesson && (
-        <Card className="border-accent/30 bg-accent/5">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="font-heading text-lg flex items-center gap-2">
-                {contentTypeIcon(activeLesson.content_type)}
-                {activeLesson.title}
-              </CardTitle>
-              <div className="flex gap-2">
-                {!isTeacherOrAdmin && !completedLessonIds.has(activeLesson.id) && (
-                  <Button size="sm" onClick={() => markComplete.mutate(activeLesson.id)}>
-                    <CheckCircle2 className="h-4 w-4 mr-1" /> Tandai Selesai
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => setActiveLesson(null)}>Tutup</Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {activeLesson.content_type === "video" && activeLesson.video_url && (
-              <div className="aspect-video rounded-lg overflow-hidden mb-4">
-                <iframe
-                  src={getYouTubeEmbedUrl(activeLesson.video_url)}
-                  className="w-full h-full"
-                  allowFullScreen
-                  title={activeLesson.title}
-                />
-              </div>
-            )}
-            {activeLesson.content_type === "pdf" && activeLesson.file_url && (
-              <div className="mb-4">
-                <a href={activeLesson.file_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="gap-2">
-                    <File className="h-4 w-4" /> Buka File PDF
-                  </Button>
-                </a>
-              </div>
-            )}
-            {activeLesson.content && (
-              <div className="prose prose-sm max-w-none font-body whitespace-pre-wrap">
-                {activeLesson.content}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Teacher/Admin: Add Chapter & Lesson */}
-      {isTeacherOrAdmin && (
-        <div className="flex gap-2 flex-wrap">
-          <Dialog open={chapterOpen} onOpenChange={(v) => { if (!v) { setChapterTitle(""); setEditChapterId(null); } setChapterOpen(v); }}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Bab</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="font-heading">{editChapterId ? "Edit Bab" : "Tambah Bab Baru"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Judul Bab</Label>
-                  <Input value={chapterTitle} onChange={(e) => setChapterTitle(e.target.value)} placeholder="Contoh: Bab 1 - Pendahuluan" />
-                </div>
-                <Button onClick={() => saveChapter.mutate()} disabled={!chapterTitle.trim() || saveChapter.isPending} className="w-full">
-                  {saveChapter.isPending ? "Menyimpan..." : editChapterId ? "Perbarui" : "Tambah Bab"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {chapters && chapters.length > 0 && (
-            <Dialog open={lessonOpen} onOpenChange={(v) => { if (!v) resetLessonForm(); setLessonOpen(v); }}>
+        {/* Meeting Link Section */}
+        <div className="flex flex-col items-end gap-2">
+          {course.meeting_url && (
+            <a href={course.meeting_url} target="_blank" rel="noopener noreferrer">
+              <Button className="bg-green-600 hover:bg-green-700 gap-2">
+                <VideoIcon className="h-4 w-4" /> Gabung Kelas Online
+              </Button>
+            </a>
+          )}
+          {isTeacherOrAdmin && (
+            <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Pelajaran</Button>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Edit className="h-4 w-4" /> {course.meeting_url ? "Edit Link Meet" : "Set Link Meet"}
+                </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="font-heading">{editLessonId ? "Edit Pelajaran" : "Tambah Pelajaran"}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
+              <DialogContent>
+                <DialogHeader><DialogTitle>Link Tatap Muka Online</DialogTitle></DialogHeader>
+                <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label>Bab</Label>
-                    <Select value={lessonChapterId} onValueChange={setLessonChapterId}>
-                      <SelectTrigger><SelectValue placeholder="Pilih bab" /></SelectTrigger>
-                      <SelectContent>
-                        {chapters.map((ch) => (
-                          <SelectItem key={ch.id} value={ch.id}>{ch.title}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Judul Pelajaran</Label>
-                    <Input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="Judul pelajaran" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Tipe Konten</Label>
-                    <Select value={lessonContentType} onValueChange={setLessonContentType}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Teks</SelectItem>
-                        <SelectItem value="video">Video YouTube</SelectItem>
-                        <SelectItem value="pdf">File PDF</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {lessonContentType === "video" && (
-                    <div className="space-y-2">
-                      <Label>URL Video YouTube</Label>
-                      <Input value={lessonVideoUrl} onChange={(e) => setLessonVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
-                    </div>
-                  )}
-                  {lessonContentType === "pdf" && (
-  <div className="space-y-2">
-    <Label>Upload File PDF</Label>
-    <Input
-      type="file"
-      accept="application/pdf"
-      onChange={(e) => {
-        if (e.target.files && e.target.files[0]) {
-          setLessonFile(e.target.files[0]);
-        }
-      }}
-    />
-  </div>
-)}
-                  <div className="space-y-2">
-                    <Label>Konten Teks {lessonContentType !== "text" && "(opsional)"}</Label>
-                    <Textarea
-                      value={lessonContent}
-                      onChange={(e) => setLessonContent(e.target.value)}
-                      placeholder="Tulis konten pelajaran..."
-                      rows={6}
+                    <Label>URL Google Meet (Manual dari Pengajar)</Label>
+                    <Input 
+                      placeholder="https://meet.google.com/xxx-yyyy-zzz"
+                      value={meetingUrl}
+                      onChange={(e) => setMeetingUrl(e.target.value)}
                     />
                   </div>
-                  <Button
-                    onClick={() => saveLesson.mutate()}
-                    disabled={!lessonTitle.trim() || !lessonChapterId || saveLesson.isPending}
-                    className="w-full"
-                  >
-                    {saveLesson.isPending ? "Menyimpan..." : editLessonId ? "Perbarui" : "Tambah Pelajaran"}
+                  <Button className="w-full bg-primary" onClick={() => updateMeeting.mutate()} disabled={updateMeeting.isPending}>
+                    Simpan Link
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Chapters & Lessons */}
-      {chapters && chapters.length > 0 ? (
-        <Accordion type="multiple" defaultValue={chapters.map((c) => c.id)} className="space-y-3">
-          {chapters.map((chapter, idx) => {
-            const chapterLessons = lessons?.filter((l) => l.chapter_id === chapter.id) || [];
-            const chapterCompleted = chapterLessons.filter((l) => completedLessonIds.has(l.id)).length;
-            return (
-              <AccordionItem key={chapter.id} value={chapter.id} className="border rounded-lg px-4">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-3 flex-1 text-left">
-                    <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1">
-                      <p className="font-heading font-semibold">{chapter.title}</p>
-                      <p className="text-xs text-muted-foreground font-body">
-                        {chapterLessons.length} pelajaran
-                        {!isTeacherOrAdmin && chapterLessons.length > 0 && ` · ${chapterCompleted}/${chapterLessons.length} selesai`}
-                      </p>
-                    </div>
-                    {isTeacherOrAdmin && (
-                      <div className="flex gap-1 mr-2" onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setChapterTitle(chapter.title); setEditChapterId(chapter.id); setChapterOpen(true); }}>
-                          <Edit className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteChapter.mutate(chapter.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 py-2">
-                    {chapterLessons.length > 0 ? chapterLessons.map((lesson) => {
-                      const isCompleted = completedLessonIds.has(lesson.id);
-                      const isActive = activeLesson?.id === lesson.id;
-                      return (
-                        <div
-                          key={lesson.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                            isActive ? "bg-accent/15 border border-accent/30" : "hover:bg-muted/50"
-                          }`}
-                          onClick={() => setActiveLesson(lesson)}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-                          ) : (
-                            <Play className="h-5 w-5 text-muted-foreground shrink-0" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-body text-sm ${isCompleted ? "text-muted-foreground" : ""}`}>{lesson.title}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {contentTypeIcon(lesson.content_type)}
-                            {isTeacherOrAdmin && (
-                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditLesson(lesson)}>
-                                  <Edit className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteLesson.mutate(lesson.id)}>
-                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }) : (
-                      <p className="text-sm text-muted-foreground font-body py-2 text-center">Belum ada pelajaran di bab ini.</p>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-      ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-heading font-semibold text-lg mb-2">Belum Ada Bab</h3>
-            <p className="text-muted-foreground font-body">
-              {isTeacherOrAdmin ? "Mulai tambahkan bab dan pelajaran untuk kursus ini." : "Kursus ini belum memiliki konten."}
-            </p>
+      {/* Progress Section */}
+      {!isTeacherOrAdmin && totalLessons > 0 && (
+        <Card className="bg-muted/30">
+          <CardContent className="py-4">
+            <div className="flex justify-between text-sm mb-2 font-medium">
+              <span>Progres Belajar</span>
+              <span>{progressPercent}%</span>
+            </div>
+            <Progress value={progressPercent} className="h-2" />
           </CardContent>
         </Card>
       )}
+
+      {/* Active Content Viewer */}
+      {activeLesson && (
+        <Card className="border-primary/20 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl flex items-center gap-2">
+              {activeLesson.content_type === "video" ? <Video className="text-blue-500" /> : <FileText className="text-orange-500" />}
+              {activeLesson.title}
+            </CardTitle>
+            <div className="flex gap-2">
+              {!isTeacherOrAdmin && !completedLessonIds.has(activeLesson.id) && (
+                <Button size="sm" variant="default" onClick={() => markComplete.mutate(activeLesson.id)}>Tandai Selesai</Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setActiveLesson(null)}>Tutup</Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {activeLesson.content_type === "video" && activeLesson.video_url && (
+              <div className="aspect-video rounded-lg overflow-hidden bg-black mb-4">
+                <iframe src={getYouTubeEmbedUrl(activeLesson.video_url)} className="w-full h-full" allowFullScreen />
+              </div>
+            )}
+            {activeLesson.content_type === "pdf" && activeLesson.file_url && (
+              <div className="mb-4 p-4 border rounded-lg flex items-center justify-between bg-muted/20">
+                <span className="text-sm font-medium">Dokumen Materi (PDF)</span>
+                <a href={activeLesson.file_url} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> Buka PDF</Button>
+                </a>
+              </div>
+            )}
+            <div className="prose max-w-none dark:prose-invert text-sm">{activeLesson.content}</div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Management Buttons */}
+      {isTeacherOrAdmin && (
+        <div className="flex gap-3">
+          <Dialog open={chapterOpen} onOpenChange={setChapterOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Bab</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>{editChapterId ? "Edit Bab" : "Bab Baru"}</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input value={chapterTitle} onChange={(e) => setChapterTitle(e.target.value)} placeholder="Nama Bab..." />
+                <Button className="w-full" onClick={() => saveChapter.mutate()} disabled={!chapterTitle}>Simpan</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={lessonOpen} onOpenChange={setLessonOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2"><PlusCircle className="h-4 w-4" /> Tambah Pelajaran</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader><DialogTitle>Detail Pelajaran</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="space-y-2 col-span-2">
+                  <Label>Pilih Bab</Label>
+                  <Select value={lessonChapterId} onValueChange={setLessonChapterId}>
+                    <SelectTrigger><SelectValue placeholder="Pilih Bab" /></SelectTrigger>
+                    <SelectContent>
+                      {chapters?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Judul Pelajaran</Label>
+                  <Input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipe Konten</Label>
+                  <Select value={lessonContentType} onValueChange={setLessonContentType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text">Teks Saja</SelectItem>
+                      <SelectItem value="video">Video YouTube</SelectItem>
+                      <SelectItem value="pdf">File PDF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {lessonContentType === "video" && (
+                  <div className="space-y-2">
+                    <Label>URL YouTube</Label>
+                    <Input value={lessonVideoUrl} onChange={(e) => setLessonVideoUrl(e.target.value)} />
+                  </div>
+                )}
+                {lessonContentType === "pdf" && (
+                  <div className="space-y-2">
+                    <Label>File PDF</Label>
+                    <Input type="file" accept="application/pdf" onChange={(e) => setLessonFile(e.target.files?.[0] || null)} />
+                  </div>
+                )}
+                <div className="space-y-2 col-span-2">
+                  <Label>Isi Materi (Teks/Deskripsi)</Label>
+                  <Textarea rows={5} value={lessonContent} onChange={(e) => setLessonContent(e.target.value)} />
+                </div>
+              </div>
+              <Button className="w-full mt-4" onClick={() => saveLesson.mutate()} disabled={!lessonTitle || !lessonChapterId}>Simpan Pelajaran</Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+
+      {/* Chapters & Lessons List */}
+      <div className="space-y-4">
+        {chapters?.map((chapter, idx) => {
+          const chapterLessons = lessons?.filter(l => l.chapter_id === chapter.id) || [];
+          return (
+            <Accordion key={chapter.id} type="single" collapsible className="w-full border rounded-lg bg-card">
+              <AccordionItem value={chapter.id} className="border-none px-4">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold">{idx + 1}</div>
+                    <div>
+                      <h3 className="font-semibold">{chapter.title}</h3>
+                      <p className="text-xs text-muted-foreground">{chapterLessons.length} Pelajaran</p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="space-y-2 mt-2">
+                    {chapterLessons.map(lesson => (
+                      <div key={lesson.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted/50 border border-transparent hover:border-border transition-all group">
+                        <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => setActiveLesson(lesson)}>
+                          {completedLessonIds.has(lesson.id) ? <CheckCircle2 className="text-green-500 h-5 w-5" /> : <Play className="h-5 w-5 text-muted-foreground" />}
+                          <span className="text-sm font-medium">{lesson.title}</span>
+                        </div>
+                        {isTeacherOrAdmin && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                              setLessonTitle(lesson.title);
+                              setEditLessonId(lesson.id);
+                              setLessonChapterId(chapter.id);
+                              setLessonOpen(true);
+                            }}><Edit className="h-3 w-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteLesson.mutate(lesson.id)}><Trash2 className="h-3 w-3" /></Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          );
+        })}
+      </div>
     </div>
   );
 };
