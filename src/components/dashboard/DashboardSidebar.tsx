@@ -1,8 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  BookOpen, LayoutDashboard, GraduationCap, FileQuestion,
-  ClipboardCheck, BarChart3, MessageSquare, UserCheck,
-  Download, Settings, LogOut, PlusCircle, Users, Shield
+  BookOpen,
+  LayoutDashboard,
+  GraduationCap,
+  FileQuestion,
+  ClipboardCheck,
+  BarChart3,
+  MessageSquare,
+  UserCheck,
+  Download,
+  Settings,
+  LogOut,
+  PlusCircle,
+  Users,
+  Shield,
+  Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -19,28 +31,64 @@ const studentMenuItems = [
   { icon: UserCheck, label: "Absensi", path: "/dashboard/attendance" },
   { icon: Download, label: "Export Data", path: "/dashboard/export" },
   { icon: Settings, label: "Pengaturan", path: "/dashboard/settings" },
+  {
+    icon: Phone,
+    label: "Bantuan",
+    path: "https://wa.me/6285975213222?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai...",
+    external: true,
+  },
 ];
 
 const teacherMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: PlusCircle, label: "Kelola Kursus", path: "/dashboard/manage-courses" },
-  { icon: FileQuestion, label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  {
+    icon: PlusCircle,
+    label: "Kelola Kursus",
+    path: "/dashboard/manage-courses",
+  },
+  {
+    icon: FileQuestion,
+    label: "Kelola Kuis",
+    path: "/dashboard/manage-quizzes",
+  },
   { icon: ClipboardCheck, label: "Tugas", path: "/dashboard/assignments" },
-  { icon: UserCheck, label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  {
+    icon: UserCheck,
+    label: "Kelola Absensi",
+    path: "/dashboard/manage-attendance",
+  },
   { icon: Users, label: "Siswa", path: "/dashboard/students" },
   { icon: MessageSquare, label: "Forum", path: "/dashboard/forum" },
   { icon: BarChart3, label: "Progres Siswa", path: "/dashboard/progress" },
   { icon: Download, label: "Export Data", path: "/dashboard/export" },
   { icon: Settings, label: "Pengaturan", path: "/dashboard/settings" },
+  {
+    icon: Phone,
+    label: "Bantuan",
+    path: "https://wa.me/6285975213222?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai...",
+    external: true,
+  },
 ];
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Shield, label: "Kelola Pengguna", path: "/dashboard/admin-users" },
-  { icon: PlusCircle, label: "Kelola Kursus", path: "/dashboard/manage-courses" },
-  { icon: FileQuestion, label: "Kelola Kuis", path: "/dashboard/manage-quizzes" },
+  {
+    icon: PlusCircle,
+    label: "Kelola Kursus",
+    path: "/dashboard/manage-courses",
+  },
+  {
+    icon: FileQuestion,
+    label: "Kelola Kuis",
+    path: "/dashboard/manage-quizzes",
+  },
   { icon: ClipboardCheck, label: "Tugas", path: "/dashboard/assignments" },
-  { icon: UserCheck, label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
+  {
+    icon: UserCheck,
+    label: "Kelola Absensi",
+    path: "/dashboard/manage-attendance",
+  },
   { icon: Users, label: "Siswa", path: "/dashboard/students" },
   { icon: GraduationCap, label: "Kursus", path: "/dashboard/courses" },
   { icon: BarChart3, label: "Progres", path: "/dashboard/progress" },
@@ -54,7 +102,11 @@ const DashboardSidebar = () => {
   const navigate = useNavigate();
   const { data: userRole } = useUserRole();
 
-  const menuItems = userRole?.isAdmin ? adminMenuItems : userRole?.isTeacher ? teacherMenuItems : studentMenuItems;
+  const menuItems = userRole?.isAdmin
+    ? adminMenuItems
+    : userRole?.isTeacher
+      ? teacherMenuItems
+      : studentMenuItems;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -65,18 +117,22 @@ const DashboardSidebar = () => {
     <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
       <div className="p-5 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-  <img
-    src={logo}
-    alt="Logo PKBM"
-    className="h-10 w-10 object-contain"
-  />
-  <span className="font-heading text-l font-bold text-sidebar-foreground">
-    PKBM PUSPA LOKA NUSANTARA
-  </span>
-</Link>
+          <img
+            src={logo}
+            alt="Logo PKBM"
+            className="h-10 w-10 object-contain"
+          />
+          <span className="font-heading text-l font-bold text-sidebar-foreground">
+            PKBM PUSPA LOKA NUSANTARA
+          </span>
+        </Link>
         {userRole && (
           <span className="text-xs font-body text-sidebar-foreground/60 mt-1 block">
-            {userRole.isAdmin ? "🛡️ Admin" : userRole.isTeacher ? "👨‍🏫 Guru" : "👨‍🎓 Siswa"}
+            {userRole.isAdmin
+              ? "🛡️ Admin"
+              : userRole.isTeacher
+                ? "👨‍🏫 Guru"
+                : "👨‍🎓 Siswa"}
           </span>
         )}
       </div>

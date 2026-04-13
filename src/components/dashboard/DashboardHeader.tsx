@@ -17,7 +17,12 @@ const studentMenuItems = [
   { label: "Progres", path: "/dashboard/progress" },
   { label: "Forum", path: "/dashboard/forum" },
   { label: "Absensi", path: "/dashboard/attendance" },
-   { label: "Pengaturan", path: "/dashboard/settings" },
+  { label: "Pengaturan", path: "/dashboard/settings" },
+  {
+    label: "Bantuan",
+    path: "https://wa.me/6285975213222?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai...",
+    external: true,
+  },
 ];
 
 // GURU
@@ -28,9 +33,14 @@ const teacherMenuItems = [
   { label: "Tugas", path: "/dashboard/assignments" },
   { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
   { label: "Siswa", path: "/dashboard/students" },
-  { label: "Forum", path: "/dashboard/forum" }, 
-   {label: "Export Data", path: "/dashboard/export" },
-  {label: "Pengaturan", path: "/dashboard/settings"},
+  { label: "Forum", path: "/dashboard/forum" },
+  { label: "Export Data", path: "/dashboard/export" },
+  { label: "Pengaturan", path: "/dashboard/settings" },
+  {
+    label: "Bantuan",
+    path: "https://wa.me/6285975213222?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai...",
+    external: true,
+  },
 ];
 
 // ADMIN
@@ -43,8 +53,8 @@ const adminMenuItems = [
   { label: "Kelola Absensi", path: "/dashboard/manage-attendance" },
   { label: "Siswa", path: "/dashboard/students" },
   { label: "Kursus", path: "/dashboard/courses" },
-  {label: "Export Data", path: "/dashboard/export" },
-  {label: "Pengaturan", path: "/dashboard/settings" },
+  { label: "Export Data", path: "/dashboard/export" },
+  { label: "Pengaturan", path: "/dashboard/settings" },
 ];
 
 // ================= COMPONENT =================
@@ -76,15 +86,10 @@ const DashboardHeader = () => {
 
   return (
     <header className="lg:hidden sticky top-0 z-50 bg-sidebar border-b border-sidebar-border">
-      
       {/* TOP BAR */}
       <div className="flex items-center justify-between px-4 h-14">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img
-            src={logo}
-            alt="Logo PKBM"
-            className="h-9 w-9 object-contain"
-          />
+          <img src={logo} alt="Logo PKBM" className="h-9 w-9 object-contain" />
           <span className="font-heading text-lg font-bold text-sidebar-foreground">
             PKBM PUSPA LOKA NUSANTARA
           </span>
@@ -101,7 +106,6 @@ const DashboardHeader = () => {
       {/* DROPDOWN MENU */}
       {open && (
         <div className="bg-sidebar border-t border-sidebar-border p-4 space-y-1">
-          
           {mobileMenuItems.map((item) => (
             <Link
               key={item.path}
